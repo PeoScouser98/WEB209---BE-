@@ -1,16 +1,18 @@
 import express from "express";
-import swaggerUI from "swagger-ui-express";
 import swaggerJSDoc from "swagger-jsdoc";
+import swaggerUI from "swagger-ui-express";
 
 import compression from "compression";
 import cors from "cors";
 import morgan from "morgan";
+import session, { MemoryStore } from "express-session";
+import cookieParser from "cookie-parser";
+
+import "dotenv/config";
 
 // Import routers
-import ProjectRouter from "./apis/v1/routes/project.route";
-import TaskRouter from "./apis/v1/routes/task.route";
-import UserRouter from "./apis/v1/routes/user.route";
-import path from "path";
+import RootRouter from "./apis/v1/routes";
+import passport from "passport";
 
 const options: swaggerJSDoc.OAS3Options = {
 	definition: {
@@ -30,10 +32,12 @@ const options: swaggerJSDoc.OAS3Options = {
 };
 
 const app = express();
-
+app.use(cookieParser());
 app.use(
 	cors({
-		origin: "*",
+		origin: "http://localhost:8080",
+		methods: "GET, POST, PUT, DELETE, PATCH",
+		credentials: true,
 	})
 );
 app.use(morgan("tiny"));
@@ -44,15 +48,28 @@ app.use(
 		threshold: 10 * 1024,
 	})
 );
-app.use("/v1/api", UserRouter);
-app.use("/v1/api", ProjectRouter);
-app.use("/v1/api", TaskRouter);
+app.use(
+	session({
+		store: new MemoryStore(),
+		secret: process.env.SESSION_SECRET!,
+		saveUninitialized: false,
+	})
+);
+
+// Use app routes
+app.use("/v1/api", RootRouter);
 
 app.get("/", async (req, res) => {
-    return res.status(200).json({
-        status: 200,
-        message: "Server now is running!",
-    });
+	return res.status(200).json({
+		status: 200,
+		message: "Server now is running!",
+	});
 });
+
+// Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Swagger
 app.use("/api/docs", swaggerUI.serve, swaggerUI.setup(swaggerJSDoc(options)));
 export default app;

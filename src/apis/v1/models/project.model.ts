@@ -1,6 +1,6 @@
 import mongoose, { ObjectId } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
-import { User } from "./user.model";
+import { IUser } from "./user.model";
 
 export interface Project {
 	_id: ObjectId;
@@ -8,14 +8,12 @@ export interface Project {
 	creator: ObjectId;
 	members: Array<{
 		_id: ObjectId;
-		info: Omit<User, "password">;
+		info: Omit<IUser, "password">;
 		role: string;
 		joinedAt: Date;
 	}>;
 	createdAt: Date;
 	updatedAt: Date;
-	customer: string;
-	budget: number;
 	estimatedCompleteDate: Date;
 	tasks?: [];
 }
@@ -50,14 +48,7 @@ const ProjectSchema = new mongoose.Schema(
 				},
 			},
 		],
-		customer: {
-			type: String,
-			uppercase: true,
-			trim: true,
-			require: true,
-			default: "Unknown",
-		},
-		budget: { type: Number, default: 1000 },
+
 		estimatedCompleteDate: {
 			type: Date,
 			default: () => {
@@ -79,6 +70,10 @@ const ProjectSchema = new mongoose.Schema(
 );
 ProjectSchema.plugin(mongooseAutoPopulate);
 ProjectSchema.pre("save", function (next) {
+	if (!this.creator) {
+		return;
+	}
+
 	this.members.push({
 		info: this.creator,
 		role: "PROJECT_MANAGER",
@@ -86,12 +81,6 @@ ProjectSchema.pre("save", function (next) {
 	});
 
 	next();
-});
-
-ProjectSchema.virtual("tasks", {
-	ref: "Tasks",
-	localField: "_id",
-	foreignField: "project",
 });
 
 const ProjectModel = mongoose.model<Project>("Projects", ProjectSchema);

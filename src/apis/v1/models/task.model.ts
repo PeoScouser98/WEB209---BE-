@@ -1,6 +1,6 @@
 import mongooseAutoPopulate from "mongoose-autopopulate";
 import mongoose, { ObjectId } from "mongoose";
-import { User } from "./user.model";
+import { IUser } from "./user.model";
 import { Project } from "./project.model";
 
 export interface Task {
@@ -8,7 +8,7 @@ export interface Task {
 	project: Partial<Project>;
 	title: string;
 	description: string;
-	assignees: Array<ObjectId | Partial<User>>;
+	assignees: Array<ObjectId | Partial<IUser>>;
 	startedAt: Date;
 	deadline: Date;
 	createdAt?: Date;
@@ -68,7 +68,7 @@ const TaskSchema = new mongoose.Schema(
 		timestamps: true,
 		strictQuery: false,
 		strictPopulate: false,
-	},
+	}
 );
 
 TaskSchema.plugin(mongooseAutoPopulate);

@@ -9,7 +9,7 @@ const ProjectService = {
 		try {
 			return await ProjectModel.find()
 				.elemMatch("members", { info: userId })
-				.populate({ path: "tasks", select: "-creator -assignee" })
+				.lean()
 				.exec();
 		} catch (error) {
 			throw error as MongooseError;

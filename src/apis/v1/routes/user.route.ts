@@ -1,35 +1,44 @@
-import { Router } from "express";
-import UserController from "../controllers/user.controller";
-import AuthMiddleware from "../middlewares/auth.middleware";
+import { Request, Response, Router } from "express";
+import passport from "passport";
+import * as UserController from "../controllers/user.controller";
+import * as AuthMiddleware from "../middlewares/auth.middleware";
+import "dotenv/config";
+import "../../../auth/googlePassport.auth";
 
-const UserRouter = Router();
+const userRouter = Router();
 
-UserRouter.get(
+userRouter.get(
 	"/user",
 	AuthMiddleware.checkAuthenticated,
 	UserController.getUser
 );
-UserRouter.get("/refresh-token/:auth", UserController.refreshToken);
-UserRouter.get("/find-user", UserController.findUser);
-UserRouter.post("/login", UserController.login);
-UserRouter.post("/register", UserController.register);
-UserRouter.patch(
-	"/change-password",
-	AuthMiddleware.checkAuthenticated,
-	UserController.changePassword
+userRouter.get("/refresh-token", UserController.refreshToken);
+userRouter.get("/find-user", UserController.findUser);
+userRouter.get(
+	"/auth/google",
+	passport.authenticate("google", { scope: ["email", "profile"] })
 );
-UserRouter.patch(
+userRouter.get(
+	"/auth/google/callback",
+	passport.authenticate("google", {
+		failureRedirect: process.env.CLIENT_URL + "/",
+	}),
+	UserController.signinOrSignupWithGoogle
+);
+
+userRouter.patch(
 	"/edit-profile",
 	AuthMiddleware.checkAuthenticated,
 	UserController.editProfile
 );
-
-export default UserRouter;
+userRouter.get("/signout", UserController.signout);
+export default userRouter;
 
 /**
  * @openapi
  * /login:
  *   tags:
+ *     - Auth
  *   post:
  *     description: Basic Auth signin with email and password
  *     requestBody:

@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import request from "supertest";
-import UserModel from "../apis/v1/models/user.model";
+import User from "../apis/v1/models/user.model";
 import app from "../app";
 
 describe("check login response data", () => {
@@ -19,7 +19,7 @@ describe("check login response data", () => {
 			dbName: "manage_projects",
 		});
 
-		const fakeUser = await new UserModel({
+		const fakeUser = await new User({
 			_id: new mongoose.Types.ObjectId(fakeUserId),
 			email: "test@email.com",
 			password: "123123",
@@ -46,7 +46,7 @@ describe("check login response data", () => {
 	test("after creating project, response body must have projectName property", async () => {
 		// TODO: Declare mock function
 		const mockCreateProject = jest.fn(() => newProject);
-		jest.spyOn(UserModel, "create").mockImplementation(() =>
+		jest.spyOn(User, "create").mockImplementation(() =>
 			mockCreateProject()
 		);
 

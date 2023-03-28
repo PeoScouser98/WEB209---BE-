@@ -5,12 +5,12 @@ import ProjectService from "../services/project.services";
 
 const ProjectController = {
 	// get all joined projects
-	async getAllJoinedProjects(req: Request | any, res: Response) {
+	async getAllJoinedProjects(req: Request, res: Response) {
 		try {
-			if (!req.auth) {
-				throw createHttpError.BadRequest("User ID must be provided!");
-			}
-			const joinedProjects = await ProjectService.getAllJoinedProjects(req.auth);
+			const joinedProjects = await ProjectService.getAllJoinedProjects(
+				req.cookies.uid
+			);
+			console.log(joinedProjects);
 			return res.status(200).json(joinedProjects);
 		} catch (error: any) {
 			console.log(error.message);
@@ -21,13 +21,17 @@ const ProjectController = {
 		}
 	},
 	// get 1 joined project
-	async getJoinedProject(req: Request | any, res: Response) {
+	async getJoinedProject(req: Request, res: Response) {
 		try {
-			if (!req.auth) {
+			if (!req.cookies.uid) {
 				throw createHttpError.BadRequest("User ID must be provided!");
 			}
-			const joinedProjects = await ProjectService.getJoinedProject(req.params.id, req.auth);
-			return res.status(200).json(joinedProjects);
+			const joinedProject = await ProjectService.getJoinedProject(
+				req.params.id,
+				req.cookies.uid
+			);
+			console.log(joinedProject);
+			return res.status(200).json(joinedProject);
 		} catch (error: any) {
 			console.log(error.message);
 			return res.status(404).json({
@@ -37,12 +41,15 @@ const ProjectController = {
 		}
 	},
 	// get 1 joined project
-	async getProjectByCreator(req: Request | any, res: Response) {
+	async getProjectByCreator(req: Request, res: Response) {
 		try {
-			if (!req.auth) {
+			if (!req.cookies.uid) {
 				throw createHttpError.BadRequest("User ID must be provided!");
 			}
-			const joinedProjects = await ProjectService.getProjectByCreator(req.params.id, req.auth);
+			const joinedProjects = await ProjectService.getProjectByCreator(
+				req.params.id,
+				req.cookies.uid
+			);
 			return res.status(200).json(joinedProjects);
 		} catch (error: any) {
 			console.log(error.message);
@@ -53,12 +60,14 @@ const ProjectController = {
 		}
 	},
 	// get all joined project
-	async getAllProjectsByCreator(req: Request | any, res: Response) {
+	async getAllProjectsByCreator(req: Request, res: Response) {
 		try {
-			if (!req.auth) {
+			if (!req.cookies.uid) {
 				throw createHttpError.BadRequest("User ID must be provided!");
 			}
-			const joinedProjects = await ProjectService.getAllProjectsByCreator(req.auth);
+			const joinedProjects = await ProjectService.getAllProjectsByCreator(
+				req.cookies.uid
+			);
 			return res.status(200).json(joinedProjects);
 		} catch (error: any) {
 			console.log(error.message);
@@ -69,13 +78,15 @@ const ProjectController = {
 		}
 	},
 	// create new project
-	async createNewProject(req: Request | any, res: Response) {
+	async createNewProject(req: Request, res: Response) {
 		try {
 			if (!req.body) {
-				throw createHttpError.BadRequest("Provide fully new project data!");
+				throw createHttpError.BadRequest(
+					"Provide fully new project data!"
+				);
 			}
 			const newProject = await ProjectService.createProject({
-				creator: req.auth,
+				creator: req.cookies.uid,
 				...req.body,
 			});
 			return res.status(201).json(newProject);
@@ -88,10 +99,16 @@ const ProjectController = {
 		}
 	},
 	// edit project
-	async updateProject(req: Request | any, res: Response) {
+	async updateProject(req: Request, res: Response) {
 		try {
-			if (!req.body || !req.params) throw createHttpError.InternalServerError("Failed to update project!");
-			const updatedProject = await ProjectService.updateProject(req.params.id, req.body);
+			if (!req.body || !req.params)
+				throw createHttpError.InternalServerError(
+					"Failed to update project!"
+				);
+			const updatedProject = await ProjectService.updateProject(
+				req.params.id,
+				req.body
+			);
 			return res.status(201).json(updatedProject);
 		} catch (error) {
 			return res.status(400).json({
@@ -104,9 +121,15 @@ const ProjectController = {
 	async addMemberToProject(req: Request, res: Response) {
 		try {
 			if (!req.body.member) {
-				throw createHttpError.BadRequest("Provide member ID to add to project!");
+				throw createHttpError.BadRequest(
+					"Provide member ID to add to project!"
+				);
 			}
-			const addMemberToProjectResponse = await ProjectService.addMemberToProject(req.params.id, req.body.member);
+			const addMemberToProjectResponse =
+				await ProjectService.addMemberToProject(
+					req.params.id,
+					req.body.member
+				);
 
 			return res.status(201).json(addMemberToProjectResponse);
 		} catch (error) {
@@ -117,12 +140,18 @@ const ProjectController = {
 		}
 	},
 	// remove member from project
-	async removeMemberToProject(req: Request | any, res: Response) {
+	async removeMemberToProject(req: Request, res: Response) {
 		try {
 			if (!req.body.member) {
-				throw createHttpError.BadRequest("Provide member ID to add to project!");
+				throw createHttpError.BadRequest(
+					"Provide member ID to add to project!"
+				);
 			}
-			const addMemberToProjectResponse = await ProjectService.removeMemberFromProject(req.params.id, req.body.member);
+			const addMemberToProjectResponse =
+				await ProjectService.removeMemberFromProject(
+					req.params.id,
+					req.body.member
+				);
 
 			return res.status(201).json(addMemberToProjectResponse);
 		} catch (error) {
@@ -133,7 +162,7 @@ const ProjectController = {
 		}
 	},
 	// delete project
-	async deleteProject(req: Request | any, res: Response) {
+	async deleteProject(req: Request, res: Response) {
 		try {
 			if (!req.params.id) {
 				throw createHttpError.NotFound("Cannot find project ID");

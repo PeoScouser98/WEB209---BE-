@@ -1,101 +1,152 @@
 import "dotenv/config";
 import { Request, Response } from "express";
 import createHttpError, { HttpError } from "http-errors";
-import jwt from "jsonwebtoken";
-import { User } from "../models/user.model";
-import UserService from "../services/user.services";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import * as UserService from "../services/user.services";
+import client from "../../../database/redis";
+import { IUser } from "../models/user.model";
 
-const UserController = {
-    async login(req: Request, res: Response) {
-        try {
-            const user = await UserService.login(req.body as Pick<User, "email" & "password">);
+export const signinOrSignupWithGoogle = async (req: Request, res: Response) => {
+	try {
+		const user = req.user as IUser;
+		if (!user) {
+			throw createHttpError.NotFound("User not found!");
+		}
+		const accessToken = jwt.sign(
+			{ auth: user },
+			process.env.ACCESS_TOKEN_SECRET!,
+			{
+				expiresIn: "15s",
+			}
+		);
+		const refreshToken = jwt.sign(
+			{ auth: user },
+			process.env.REFRESH_TOKEN_SECRET!,
+			{ expiresIn: "30d" }
+		);
 
-            const token = jwt.sign({ auth: (user as Omit<User, "password">)._id }, process.env.SECRET_KEY!, {
-                expiresIn: "30m",
-            });
-            console.log(user);
-            return res.status(200).json({ accessToken: token, auth: user._id });
-        } catch (error) {
-            return res.status(400).json({
-                message: (error as HttpError).message,
-                statusCode: (error as HttpError).statusCode,
-            });
-        }
-    },
-    async register(req: Request, res: Response) {
-        try {
-            console.log(req.body);
-            if (!req.body || !Object.keys(req.body).length) {
-                throw createHttpError.BadRequest("User data must be provided!");
-            }
-            const response = await UserService.register(req.body as Partial<User>);
-            return res.status(201).json(response);
-        } catch (error) {
-            console.log((error as HttpError).message);
-            return res.status(400).json({
-                message: (error as HttpError).message,
-                statusCode: (error as HttpError).statusCode,
-            });
-        }
-    },
-    async getUser(req: Request | any, res: Response) {
-        try {
-            if (!req.auth) {
-                throw createHttpError.Forbidden("User credential must be provided");
-            }
-            const user = await UserService.getUser(req.auth);
-            return res.status(200).json(user);
-        } catch (error) {
-            return res.status((error as HttpError).statusCode).json({
-                message: (error as HttpError).message,
-                statusCode: (error as HttpError).statusCode,
-            });
-        }
-    },
-    async refreshToken(req: Request, res: Response) {
-        try {
-            const newAccessToken = jwt.sign({ auth: req.params.auth }, process.env.SECRET_KEY!, { expiresIn: "1h" });
-            return res.status(200).json(newAccessToken);
-        } catch (error) {
-            return res.status((error as HttpError).statusCode).json({
-                message: (error as HttpError).message,
-                statusCode: (error as HttpError).statusCode,
-            });
-        }
-    },
-    async findUser(req: Request, res: Response) {
-        try {
-            const foundUsers = await UserService.findUser(req.query.searchTerm as string);
-            return res.status(200).json(foundUsers);
-        } catch (error) {
-            return res.status((error as HttpError).statusCode).json({
-                message: (error as HttpError).message,
-                statusCode: (error as HttpError).statusCode,
-            });
-        }
-    },
-    async changePassword(req: Request | any, res: Response) {
-        try {
-            console.log(req.body);
-            return await UserService.changePassword(req.auth, req.body.currentPassword, req.body.newPassword);
-        } catch (error) {
-            return res.status(400).json({
-                message: (error as HttpError).message,
-                status: (error as HttpError).status,
-            });
-        }
-    },
-    async editProfile(req: Request | any, res: Response) {
-        try {
-            const updatedProfile = await UserService.editProfile(req.auth, req.body);
-            return res.status(201).json(updatedProfile);
-        } catch (error) {
-            return res.status(400).json({
-                message: (error as HttpError).message,
-                status: (error as HttpError).status,
-            });
-        }
-    },
+		await Promise.all([
+			client.set(`rft_${user._id}`, refreshToken),
+			client.set(`act_${user._id}`, accessToken),
+		]);
+		res.cookie("access_token", accessToken, {
+			httpOnly: true,
+			maxAge: 60 * 60 * 1000,
+		});
+		res.cookie("uid", user._id.toString(), {
+			httpOnly: true,
+			maxAge: 1000 * 60 * 60 * 24 * 30,
+		});
+		res.redirect(process.env.CLIENT_URL + "/signin/success");
+	} catch (error) {
+		return res.status(400).json({
+			message: (error as HttpError).message,
+			statusCode: (error as HttpError).statusCode,
+		});
+	}
 };
 
-export default UserController;
+export const signout = async (req: Request, res: Response) => {
+	try {
+		if (!req.cookies.uid) {
+			throw createHttpError.Unauthorized("Invalid user!");
+		}
+		const [accessToken, refreshToken] = await Promise.all([
+			client.get(`act_${req.cookies.uid}`),
+			client.get(`rft_${req.cookies.uid}`),
+		]);
+		if (!accessToken || !refreshToken) {
+			throw createHttpError.BadRequest("Failed to signout!");
+		}
+
+		res.clearCookie("connect.sid", { path: "/" });
+		res.clearCookie("uid", { path: "/" });
+		res.clearCookie("access_token", { path: "/" });
+		await Promise.all([
+			client.del(`act_${req.cookies.uid}`),
+			client.del(`rft_${req.cookies.uid}`),
+		]);
+		return res.status(200).json({ message: "Signed out!" });
+	} catch (error) {
+		console.log((error as HttpError | Error).message);
+		return res.status((error as HttpError).status || 400).json({
+			message: (error as HttpError).message,
+			status: (error as HttpError).status || 400,
+		});
+	}
+};
+
+export const getUser = async (req: Request, res: Response) => {
+	try {
+		console.log(req.profile);
+		return res.status(200).json(req.profile);
+	} catch (error) {
+		return res.status((error as HttpError).statusCode).json({
+			message: (error as HttpError).message,
+			statusCode: (error as HttpError).statusCode,
+		});
+	}
+};
+
+export const refreshToken = async (req: Request, res: Response) => {
+	try {
+		const storedRefreshToken = await client.get(`rft_${req.cookies.uid}`);
+		if (!storedRefreshToken) {
+			throw createHttpError.Unauthorized(
+				"Failed to get new access token!"
+			);
+		}
+		console.log(storedRefreshToken);
+		const decoded = jwt.verify(
+			storedRefreshToken!,
+			process.env.REFRESH_TOKEN_SECRET!
+		) as JwtPayload;
+
+		const newAccessToken = jwt.sign(
+			{ auth: decoded },
+			process.env.ACCESS_TOKEN_SECRET!,
+			{ expiresIn: "30s" }
+		);
+
+		console.log("new access token:>>>", newAccessToken);
+		res.cookie("access_token", newAccessToken, {
+			httpOnly: true,
+			maxAge: 60 * 60 * 1000,
+		});
+		return res.status(200).json(newAccessToken);
+	} catch (error) {
+		return res.status((error as HttpError).statusCode).json({
+			message: (error as HttpError).message,
+			statusCode: (error as HttpError).statusCode,
+		});
+	}
+};
+
+export const findUser = async (req: Request, res: Response) => {
+	try {
+		const foundUsers = await UserService.findUser(
+			req.query.searchTerm as string
+		);
+		return res.status(200).json(foundUsers);
+	} catch (error) {
+		return res.status((error as HttpError).statusCode).json({
+			message: (error as HttpError).message,
+			statusCode: (error as HttpError).statusCode,
+		});
+	}
+};
+
+export const editProfile = async (req: Request, res: Response) => {
+	try {
+		const updatedProfile = await UserService.editProfile(
+			req.auth,
+			req.body
+		);
+		return res.status(201).json(updatedProfile);
+	} catch (error) {
+		return res.status(400).json({
+			message: (error as HttpError).message,
+			status: (error as HttpError).status,
+		});
+	}
+};
