@@ -8,7 +8,7 @@
 		"webpack": "npx webpack --config webpack.config.js",
 		"start": "node ./dist/server.js",
 		"build": "npx tsc",
-		"dev": "concurrently \"SET NODE_ENV=development && nodemon ./src/server.ts\"",
+		"dev": "concurrently \"SET NODE_ENV=development\" \"nodemon ./src/server.ts\"",
 		"test": "jest"
 	},
 	"keywords": [],
