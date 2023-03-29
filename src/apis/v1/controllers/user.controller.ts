@@ -16,7 +16,7 @@ export const signinOrSignupWithGoogle = async (req: Request, res: Response) => {
 			{ auth: user },
 			process.env.ACCESS_TOKEN_SECRET!,
 			{
-				expiresIn: "15s",
+				expiresIn: "1h",
 			}
 		);
 		const refreshToken = jwt.sign(
@@ -31,7 +31,7 @@ export const signinOrSignupWithGoogle = async (req: Request, res: Response) => {
 		]);
 		res.cookie("access_token", accessToken, {
 			httpOnly: true,
-			maxAge: 60 * 60 * 1000,
+			maxAge: 60 * 60 * 1000 * 24,
 		});
 		res.cookie("uid", user._id.toString(), {
 			httpOnly: true,
@@ -105,13 +105,13 @@ export const refreshToken = async (req: Request, res: Response) => {
 		const newAccessToken = jwt.sign(
 			{ auth: decoded },
 			process.env.ACCESS_TOKEN_SECRET!,
-			{ expiresIn: "30s" }
+			{ expiresIn: "1h" }
 		);
 
 		console.log("new access token:>>>", newAccessToken);
 		res.cookie("access_token", newAccessToken, {
 			httpOnly: true,
-			maxAge: 60 * 60 * 1000,
+			maxAge: 60 * 60 * 1000 * 24,
 		});
 		return res.status(200).json(newAccessToken);
 	} catch (error) {

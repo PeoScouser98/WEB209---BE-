@@ -12,6 +12,7 @@ export const checkAuthenticated = async (
 ) => {
 	try {
 		const token = req.cookies?.access_token;
+
 		const decoded = jwt.verify(
 			token,
 			process.env.ACCESS_TOKEN_SECRET as string
