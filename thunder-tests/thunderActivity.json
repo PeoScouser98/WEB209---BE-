@@ -18,11 +18,11 @@
     "colId": "history",
     "containerId": "",
     "name": "http://localhost:9090/api/v1/projects",
-    "url": "http://localhost:9090/api/v1/projects",
+    "url": "http://localhost:9090/api/v1/activities/641db44f6cf0d798203f4d7f",
     "method": "GET",
     "sortNum": 0,
     "created": "2023-03-23T14:11:21.601Z",
-    "modified": "2023-03-23T14:11:21.601Z",
+    "modified": "2023-04-09T18:09:14.735Z",
     "headers": [],
     "params": [],
     "tests": []

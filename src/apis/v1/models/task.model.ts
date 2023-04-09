@@ -1,11 +1,11 @@
 import mongooseAutoPopulate from "mongoose-autopopulate";
 import mongoose, { ObjectId } from "mongoose";
 import { IUser } from "./user.model";
-import { Project } from "./project.model";
+import { IProject } from "./project.model";
 
 export interface Task {
 	_id: string | ObjectId;
-	project: Partial<Project>;
+	project: Partial<IProject>;
 	title: string;
 	description: string;
 	assignees: Array<ObjectId | Partial<IUser>>;
@@ -42,6 +42,11 @@ const TaskSchema = new mongoose.Schema(
 			ref: "Users",
 			autopopulate: { select: "-password" },
 		},
+		priority: {
+			type: String,
+			default: "Medium",
+			enum: ["Low", "Medium", "High", "Very High"],
+		},
 		startedAt: {
 			type: Date,
 			require: true,
@@ -65,6 +70,7 @@ const TaskSchema = new mongoose.Schema(
 		},
 	},
 	{
+		versionKey: false,
 		timestamps: true,
 		strictQuery: false,
 		strictPopulate: false,

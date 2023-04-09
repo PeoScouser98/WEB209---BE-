@@ -13,7 +13,7 @@ userRouter.get(
 	UserController.getUser
 );
 userRouter.get("/refresh-token", UserController.refreshToken);
-userRouter.get("/find-user", UserController.findUser);
+userRouter.post("/find-user", UserController.findUser);
 userRouter.get(
 	"/auth/google",
 	passport.authenticate("google", { scope: ["email", "profile"] })
@@ -31,7 +31,7 @@ userRouter.patch(
 	AuthMiddleware.checkAuthenticated,
 	UserController.editProfile
 );
-userRouter.get("/signout", UserController.signout);
+userRouter.post("/signout", UserController.signout);
 export default userRouter;
 
 /**

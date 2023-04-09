@@ -4,7 +4,7 @@ import mongoose, { Model, MongooseError, ObjectId } from "mongoose";
 export interface IUser extends mongoose.Document {
 	_id: string | ObjectId;
 	displayName: string;
-	password: string;
+
 	email: string;
 	picture: string;
 	role: string;
@@ -15,10 +15,7 @@ export interface IUser extends mongoose.Document {
 }
 
 export interface UserModel extends Model<IUser> {
-	findOrCreate: (
-		queryObject: { [key: string]: any },
-		newDoc: Omit<IUser, "_id">
-	) => IUser;
+	findOrCreate: (queryObject: { [key: string]: any }, newDoc: Omit<IUser, "_id">) => IUser;
 }
 
 const UserSchema = new mongoose.Schema({
@@ -31,8 +28,7 @@ const UserSchema = new mongoose.Schema({
 			validator: function (value: string) {
 				return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g.test(value);
 			},
-			message: (props: any) =>
-				`${props.value} is not a valid email address!`,
+			message: (props: any) => `${props.value} is not a valid email address!`,
 		},
 	},
 
@@ -47,10 +43,6 @@ const UserSchema = new mongoose.Schema({
 		require: true,
 	},
 });
-
-UserSchema.methods.authenticate = function (entryPassword: string): boolean {
-	return bcrypt.compareSync(entryPassword, this.password);
-};
 
 UserSchema.statics.findOrCreate = function (queryObject, callback) {
 	const _this = this;

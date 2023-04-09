@@ -2,7 +2,7 @@ import mongoose, { ObjectId } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
 import { IUser } from "./user.model";
 
-export interface Project {
+export interface IProject {
 	_id: ObjectId;
 	projectName: string;
 	creator: ObjectId;
@@ -60,6 +60,7 @@ const ProjectSchema = new mongoose.Schema(
 		},
 	},
 	{
+		versionKey: false,
 		strictPopulate: false,
 		strictQuery: false,
 		timestamps: true,
@@ -83,6 +84,6 @@ ProjectSchema.pre("save", function (next) {
 	next();
 });
 
-const ProjectModel = mongoose.model<Project>("Projects", ProjectSchema);
+const ProjectModel = mongoose.model<IProject>("Projects", ProjectSchema);
 
 export default ProjectModel;

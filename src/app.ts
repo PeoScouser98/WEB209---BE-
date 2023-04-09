@@ -57,7 +57,7 @@ app.use(
 );
 
 // Use app routes
-app.use("/v1/api", RootRouter);
+app.use("/api/v1", RootRouter);
 
 app.get("/", async (req, res) => {
 	return res.status(200).json({

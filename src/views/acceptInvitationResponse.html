@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+
+		<link href="https://cdn.jsdelivr.net/npm/daisyui@2.51.5/dist/full.css" rel="stylesheet" type="text/css" />
+		<script src="https://cdn.tailwindcss.com"></script>
+		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+	</head>
+	<body>
+		<div class="w-screen h-screen flex items-center justify-center">
+			<div class="rounded-lg shadow-2xl bg-base-100 p-6 flex flex-col items-center gap-6">
+				<h1
+					class="text-center my-2 inline-flex items-center gap-3 text-2xl font-semibold normal-case text-white drop-shadow-[0_0_10px_#fff] first-letter:uppercase">
+					Rubik
+				</h1>
+
+				<div class="avatar">
+					<div class="w-12 rounded-full">
+						<img src="" alt="" id="receiver-picture" />
+					</div>
+				</div>
+				<div class="text-center">
+					<h1 class="text-center font-medium text-xl mb-4">
+						Your invitation to collaborate to <br />
+						<span id="project-name" class="text-white"></span>
+					</h1>
+
+					<div class="flex items-center gap-2 justify-center">
+						<small>
+							Invited by
+							<b id="sender-name"></b>
+						</small>
+					</div>
+				</div>
+				<div class="flex items-center justify-center gap-2">
+					<button class="btn btn-sm normal-case" id="accept-button">Accept</button>
+					<button class="btn btn-error btn-sm normal-case" id="decline-button">Decline</button>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			const $ = (selector) => {
+				const elements = document.querySelectorAll(selector);
+				return elements.length === 1 ? elements[0] : elements;
+			};
+
+			const params = new URLSearchParams(window.location.search);
+			const [projectId, projectName, receiverPicture, receiverName, receiverId, senderName, senderPicture] = [
+				"projectId",
+				"projectName",
+				"receiverPicture",
+				"receiverName",
+				"receiverId",
+				"senderName",
+				"senderPicture",
+			].map((value) => params.get(value));
+
+			const receiver_picture = $("#receiver-picture");
+			const acceptButton = $("#accept-button");
+			const declineButton = $("#decline-button");
+			const project = $("#project-name");
+			const sender_name = $("#sender-name");
+			const sender_picture = $("#sender-picture");
+
+			receiver_picture.src = receiverPicture;
+			sender_picture.src = senderPicture;
+			project.innerText += " " + projectName;
+			sender_name.innerText += " " + senderName;
+
+			if (acceptButton) {
+				acceptButton.onclick = async () => {
+					await axios.patch(`http://localhost:9090/api/v1/projects/${projectId}/invitation?response=accept`, {
+						user: receiverId,
+					});
+					alert(`You've joined ${projectName}`);
+					window.close();
+				};
+			}
+			if (declineButton) {
+				declineButton.onclick = async () => {
+					await axios.patch(`http://localhost:9090/api/v1/projects/${projectId}/invitation?response=decline`, {
+						user: receiverId,
+					});
+					alert(`You've declined to join ${projectName}`);
+					window.close();
+				};
+			}
+		</script>
+	</body>
+</html>

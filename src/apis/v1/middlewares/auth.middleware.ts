@@ -3,21 +3,14 @@ import { NextFunction, Request, Response } from "express";
 import createHttpError, { HttpError } from "http-errors";
 import jwt, { JsonWebTokenError, JwtPayload } from "jsonwebtoken";
 import User, { IUser } from "../models/user.model";
-import ProjectService from "../services/project.services";
+import * as ProjectService from "../services/project.service";
 
-export const checkAuthenticated = async (
-	req: Request,
-	res: Response,
-	next: NextFunction
-) => {
+export const checkAuthenticated = async (req: Request, res: Response, next: NextFunction) => {
 	try {
 		const token = req.cookies?.access_token;
 
-		const decoded = jwt.verify(
-			token,
-			process.env.ACCESS_TOKEN_SECRET as string
-		) as JwtPayload;
-		console.log(decoded);
+		const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string) as JwtPayload;
+
 		req.profile = decoded.auth;
 		next();
 	} catch (error) {
@@ -27,19 +20,11 @@ export const checkAuthenticated = async (
 		});
 	}
 };
-export const checkIsProjectCreator = async (
-	req: Request | any,
-	res: Response,
-	next: NextFunction
-) => {
+export const checkIsProjectCreator = async (req: Request | any, res: Response, next: NextFunction) => {
 	try {
-		const projectId =
-			req.params.projectId || req.params.id || req.query.projectId;
+		const projectId = req.params.projectId || req.params.id || req.query.projectId;
 		console.log(projectId);
-		const createdProject = await ProjectService.getProjectByCreator(
-			projectId,
-			req.cookies.uid
-		);
+		const createdProject = await ProjectService.getProjectByCreator(projectId, req.cookies.uid);
 		console.log(createdProject);
 		if (!createdProject) {
 			throw createHttpError.Forbidden("You are not project creator!");
@@ -52,25 +37,14 @@ export const checkIsProjectCreator = async (
 		});
 	}
 };
-export const checkIsMember = async (
-	req: Request | any,
-	res: Response,
-	next: NextFunction
-) => {
+export const checkIsMember = async (req: Request | any, res: Response, next: NextFunction) => {
 	try {
-		const projectId =
-			req.params.id || req.params.projectId || req.query.projectId;
+		const projectId = req.params.id || req.params.projectId || req.query.projectId;
 
 		console.log(projectId);
-		const projectJoinedIn = await ProjectService.getJoinedProject(
-			projectId,
-			req.cookies.uid
-		);
+		const projectJoinedIn = await ProjectService.getJoinedProject(projectId, req.cookies.uid);
 
-		if (!projectJoinedIn)
-			throw createHttpError.Unauthorized(
-				"You are not a member of this project!"
-			);
+		if (!projectJoinedIn) throw createHttpError.Unauthorized("You are not a member of this project!");
 		next();
 	} catch (error) {
 		return res.status(403).json({

@@ -1,15 +1,13 @@
 import { Request, Response } from "express";
 import createHttpError, { HttpError } from "http-errors";
-import TaskService from "../services/task.services";
+import TaskService from "../services/task.service";
 
 export const getTasksByProject = async (req: Request, res: Response) => {
 	try {
 		if (!req.params.projectId) {
 			throw createHttpError.NotFound("Project ID is not valid!");
 		}
-		const tasksOfProject = await TaskService.getTasksByProject(
-			req.params.projectId
-		);
+		const tasksOfProject = await TaskService.getTasksByProject(req.params.projectId);
 		return res.status(200).json(tasksOfProject);
 	} catch (error) {
 		return res.status((error as HttpError).statusCode).json({
@@ -44,10 +42,7 @@ export const updateTask = async (req: Request, res: Response) => {
 			throw createHttpError.NotFound("Unacceptable request!");
 		}
 
-		const updatedTask = await TaskService.updateTask(
-			req.params.taskId,
-			req.body
-		);
+		const updatedTask = await TaskService.updateTask(req.params.taskId, req.body);
 		console.log(updatedTask);
 		return res.status(202).json(updatedTask);
 	} catch (error) {
@@ -63,9 +58,7 @@ export const deleteTask = async (req: Request, res: Response) => {
 		if (!req.params.taskId) {
 			throw createHttpError.NotFound("Task ID is invalid!");
 		}
-		const deleteTaskResult = await TaskService.deleteTask(
-			req.params.taskId
-		);
+		const deleteTaskResult = await TaskService.deleteTask(req.params.taskId);
 		return res.status(204).json(deleteTaskResult);
 	} catch (error) {
 		return res.status((error as HttpError).statusCode).json({
