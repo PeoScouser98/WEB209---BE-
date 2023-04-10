@@ -11,6 +11,7 @@ const ActititySchema = new mongoose.Schema(
 			autopopulate: true,
 			require: true,
 		},
+	
 		log: {
 			type: String,
 			require: true,

@@ -15,7 +15,7 @@ export const checkAuthenticated = async (req: Request, res: Response, next: Next
 		next();
 	} catch (error) {
 		return res.status(401).json({
-			message: (error as HttpError).message,
+			message: (error as HttpError | JsonWebTokenError).message,
 			status: (error as HttpError).status || 401,
 		});
 	}
@@ -23,9 +23,7 @@ export const checkAuthenticated = async (req: Request, res: Response, next: Next
 export const checkIsProjectCreator = async (req: Request | any, res: Response, next: NextFunction) => {
 	try {
 		const projectId = req.params.projectId || req.params.id || req.query.projectId;
-		console.log(projectId);
 		const createdProject = await ProjectService.getProjectByCreator(projectId, req.cookies.uid);
-		console.log(createdProject);
 		if (!createdProject) {
 			throw createHttpError.Forbidden("You are not project creator!");
 		}
@@ -40,10 +38,7 @@ export const checkIsProjectCreator = async (req: Request | any, res: Response, n
 export const checkIsMember = async (req: Request | any, res: Response, next: NextFunction) => {
 	try {
 		const projectId = req.params.id || req.params.projectId || req.query.projectId;
-
-		console.log(projectId);
 		const projectJoinedIn = await ProjectService.getJoinedProject(projectId, req.cookies.uid);
-
 		if (!projectJoinedIn) throw createHttpError.Unauthorized("You are not a member of this project!");
 		next();
 	} catch (error) {

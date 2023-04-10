@@ -84,6 +84,13 @@ ProjectSchema.pre("save", function (next) {
 	next();
 });
 
+ProjectSchema.virtual("numOfTask", {
+	count: true,
+	localField: "_id",
+	foreignField: "projectId",
+	ref: "tasks",
+});
+
 const ProjectModel = mongoose.model<IProject>("Projects", ProjectSchema);
 
 export default ProjectModel;

@@ -18,31 +18,37 @@ export interface UserModel extends Model<IUser> {
 	findOrCreate: (queryObject: { [key: string]: any }, newDoc: Omit<IUser, "_id">) => IUser;
 }
 
-const UserSchema = new mongoose.Schema({
-	email: {
-		type: String,
-		require: true,
-		trim: true,
-		unique: true,
-		validate: {
-			validator: function (value: string) {
-				return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g.test(value);
+const UserSchema = new mongoose.Schema(
+	{
+		email: {
+			type: String,
+			require: true,
+			trim: true,
+			unique: true,
+			validate: {
+				validator: function (value: string) {
+					return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g.test(value);
+				},
+				message: (props: any) => `${props.value} is not a valid email address!`,
 			},
-			message: (props: any) => `${props.value} is not a valid email address!`,
+		},
+
+		displayName: {
+			type: String,
+			trim: true,
+			require: true,
+		},
+		picture: {
+			type: String,
+			trim: true,
+			require: true,
 		},
 	},
-
-	displayName: {
-		type: String,
-		trim: true,
-		require: true,
-	},
-	picture: {
-		type: String,
-		trim: true,
-		require: true,
-	},
-});
+	{
+		versionKey: false,
+		timestamps: true,
+	}
+);
 
 UserSchema.statics.findOrCreate = function (queryObject, callback) {
 	const _this = this;

@@ -1,23 +1,16 @@
-import { Request, Response, Router } from "express";
+import "dotenv/config";
+import { Router } from "express";
 import passport from "passport";
+import "../../../auth/googlePassport.auth";
 import * as UserController from "../controllers/user.controller";
 import * as AuthMiddleware from "../middlewares/auth.middleware";
-import "dotenv/config";
-import "../../../auth/googlePassport.auth";
 
 const userRouter = Router();
 
-userRouter.get(
-	"/user",
-	AuthMiddleware.checkAuthenticated,
-	UserController.getUser
-);
+userRouter.get("/user", AuthMiddleware.checkAuthenticated, UserController.getUser);
 userRouter.get("/refresh-token", UserController.refreshToken);
 userRouter.post("/find-user", UserController.findUser);
-userRouter.get(
-	"/auth/google",
-	passport.authenticate("google", { scope: ["email", "profile"] })
-);
+userRouter.get("/auth/google", passport.authenticate("google", { scope: ["email", "profile"] }));
 userRouter.get(
 	"/auth/google/callback",
 	passport.authenticate("google", {
@@ -26,11 +19,7 @@ userRouter.get(
 	UserController.signinOrSignupWithGoogle
 );
 
-userRouter.patch(
-	"/edit-profile",
-	AuthMiddleware.checkAuthenticated,
-	UserController.editProfile
-);
+userRouter.patch("/edit-profile", AuthMiddleware.checkAuthenticated, UserController.editProfile);
 userRouter.post("/signout", UserController.signout);
 export default userRouter;
 

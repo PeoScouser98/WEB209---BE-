@@ -10,7 +10,7 @@ import { getInvitationMailTemplate } from "../../../helpers/invitationMailTempla
 
 export const getAllJoinedProjects = async (userId: string) => {
 	try {
-		return await ProjectModel.find().elemMatch("members", { info: userId }).lean().exec();
+		return await ProjectModel.find({}).populate({ path: "tasks" }).elemMatch("members", { info: userId }).lean().exec();
 	} catch (error) {
 		throw error as MongooseError;
 	}

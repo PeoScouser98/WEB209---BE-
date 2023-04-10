@@ -9,8 +9,7 @@ export const login = async (data: Partial<IUser>) => {
 			email: data.email,
 		}).exec()) as IUser;
 		if (!user) throw new MongooseError("Account doesn't exist!");
-		if (!user.authenticate(data.password as string))
-			throw new MongooseError("Password is incorrect!");
+		if (!user.authenticate(data.password as string)) throw new MongooseError("Password is incorrect!");
 
 		return user;
 	} catch (error) {
@@ -33,9 +32,7 @@ export const register = async (data: Partial<IUser>) => {
 };
 export const getUser = async (credential: string) => {
 	try {
-		return await User.findOne({ _id: credential })
-			.select("-password")
-			.exec();
+		return await User.findOne({ _id: credential }).select("-password").exec();
 	} catch (error) {
 		throw error as MongooseError;
 	}
@@ -44,10 +41,7 @@ export const findUser = async (searchTerm: string) => {
 	try {
 		const searchTermPattern = new RegExp(searchTerm, "gi");
 		const users = await User.find({
-			$or: [
-				{ email: searchTermPattern },
-				{ username: searchTermPattern },
-			],
+			$or: [{ email: searchTermPattern }, { username: searchTermPattern }],
 		})
 			.select("-password")
 			.exec();
@@ -57,41 +51,11 @@ export const findUser = async (searchTerm: string) => {
 		throw error as MongooseError;
 	}
 };
-export const changePassword = async (
-	userId: string,
-	previousPassword: string,
-	newPassword: string
-) => {
-	try {
-		const user = await User.findOne({ _id: userId }).exec();
-		if (!user?.authenticate(previousPassword)) {
-			throw new Error("Current password is incorrect!");
-		}
-		console.log(newPassword);
-		const hashedPassword = bcrypt.hashSync(
-			newPassword,
-			bcrypt.genSaltSync(10)
-		);
-		return await User.updateOne(
-			{
-				_id: userId,
-			},
-			{ password: hashedPassword },
-			{ new: true }
-		);
-	} catch (error) {
-		throw error;
-	}
-};
-export const editProfile = async (
-	userId: string,
-	updatedUserInfo: Partial<IUser>
-) => {
+
+export const editProfile = async (userId: string, updatedUserInfo: Partial<IUser>) => {
 	try {
 		if (updatedUserInfo.username) {
-			updatedUserInfo.photoUrl =
-				"https://ui-avatars.com/api/?name=" +
-				updatedUserInfo.username.charAt(0);
+			updatedUserInfo.photoUrl = "https://ui-avatars.com/api/?name=" + updatedUserInfo.username.charAt(0);
 		}
 		return await User.findOneAndUpdate({ _id: userId }, updatedUserInfo, {
 			new: true,

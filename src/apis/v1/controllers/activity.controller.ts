@@ -6,7 +6,7 @@ import { HttpError } from "http-errors";
 export const createActivityLog = async (req: Request, res: Response) => {
 	try {
 		console.log(req.profile);
-		const newLog = await ActivityService.createActivityLog(req.profile?.auth, req.body.log);
+		const newLog = await ActivityService.createActivityLog(req.profile, req.body.log);
 		console.log(newLog);
 		return res.status(201).json(newLog);
 	} catch (error) {
@@ -20,7 +20,7 @@ export const createActivityLog = async (req: Request, res: Response) => {
 
 export const getCurrentActivityLog = async (req: Request, res: Response) => {
 	try {
-		const currentUserActivities = await ActivityService.getCurrentActivities(req.profile?.auth?._id);
+		const currentUserActivities = await ActivityService.getCurrentActivities(req.profile?._id);
 		return res.status(200).json(currentUserActivities);
 	} catch (error) {
 		return res.status(404).json({
